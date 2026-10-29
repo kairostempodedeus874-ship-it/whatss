@@ -1,0 +1,69 @@
+# Fly.io — configuração do servidor de WhatsApp (Kairós)
+# ---------------------------------------------------------------
+# Este arquivo já vem com o essencial configurado:
+#   - a máquina NUNCA hiberna (auto_stop_machines = false)
+#   - 1 instância sempre ligada (min_machines_running = 1)
+#   - volume persistente em /data (a sessão do WhatsApp mora ali)
+#   - verificação de saúde tolerante (10s), com tempo de sobra para subir
+#
+# Passos:
+#   1) fly launch --no-deploy --name SEU-APP --region gru
+#   2) fly volumes create wpp_auth --size 1 --region gru
+#   3) fly secrets set WPP_API_KEY=... WPP_AGENT_SECRET=... SUPABASE_URL=... SUPABASE_ANON_KEY=...
+#   4) fly deploy
+#
+# ⚠️ O nome abaixo PRECISA ser exatamente o nome do seu app no Fly.
+#    Se o seu endereço é masterrrr.fly.dev, o nome é "masterrrr".
+#    Nome diferente = o deploy vai para outro app e a URL fica sem resposta
+#    (é a causa nº1 do erro "Request failed" depois do deploy).
+app = "masterrrr"
+primary_region = "gru"   # São Paulo. Outras opções: gig, scl, mia, iad
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3001"
+  TZ = "America/Sao_Paulo"
+  # A sessão fica DENTRO do volume montado em /data
+  WPP_AUTH_DIR = "/data/wpp-auth"
+
+# Desligamento limpo: o Fly avisa o processo (SIGTERM) e espera até 10s
+# antes de matar. Nesse tempo o servidor fecha a sessão do WhatsApp com
+# segurança — é isso que evita credencial corrompida a cada deploy.
+kill_signal = "SIGTERM"
+kill_timeout = "10s"
+
+[[mounts]]
+  source = "wpp_auth"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  # NUNCA deixar dormir: sem processo vivo a sessão do WhatsApp cai.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # 512 MB atende. Se o Fly reiniciar a máquina sozinho com frequência
+  # (memória estourada), troque para "1gb" — custa um pouco mais.
+  memory = "512mb"
+
+[[restart]]
+  policy = "always"
+
+[checks]
+  [checks.health]
+    type = "http"
+    method = "GET"
+    port = 3001
+    path = "/api/health"
+    interval = "30s"
+    # 10s de tolerância: o endpoint responde na hora, mas isso protege a
+    # máquina de ser reiniciada em loop por qualquer oscilação momentânea.
+    timeout = "10s"
+    # Tempo para o Node + Baileys subirem antes da primeira checagem.
+    grace_period = "60s"

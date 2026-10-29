@@ -1,0 +1,4 @@
+node_modules/
+.env
+wpp-auth/
+npm-debug.log*

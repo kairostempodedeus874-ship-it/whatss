@@ -1,0 +1,36 @@
+# Render — configuração do servidor de WhatsApp (Kairós)
+# ---------------------------------------------------------------
+# Alternativa ao Fly.io. Mais caro (~US$ 7,25/mês), porém é o caminho mais
+# simples: conecta o repositório do GitHub e o painel cuida do resto.
+#
+# IMPORTANTE:
+#   - Plano "starter" (o grátis NÃO serve: ele dorme e não tem disco)
+#   - O disco é obrigatório para a sessão do WhatsApp sobreviver
+
+services:
+  - type: web
+    name: kairos-whatsapp
+    runtime: docker
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: TZ
+        value: America/Sao_Paulo
+      - key: WPP_AUTH_DIR
+        value: /var/data/wpp-auth
+      - key: WPP_API_KEY
+        sync: false
+      - key: WPP_AGENT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+    disk:
+      name: wpp-auth
+      mountPath: /var/data
+      sizeGB: 1

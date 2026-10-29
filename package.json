@@ -1,0 +1,23 @@
+{
+  "name": "kairoswpp-server",
+  "version": "5.0.0",
+  "description": "Servidor WhatsApp Kairós (Baileys) — cobranças automáticas + atendimento por IA",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.49.4",
+    "@whiskeysockets/baileys": "^6.7.0",
+    "cors": "2.8.5",
+    "dotenv": "16.4.7",
+    "express": "4.21.2",
+    "node-cron": "3.0.3",
+    "pino": "9.5.0",
+    "qrcode": "1.5.4"
+  }
+}

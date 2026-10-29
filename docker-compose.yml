@@ -1,0 +1,30 @@
+# Docker Compose — para VPS própria (Hetzner, Contabo, Oracle, etc.)
+# Uso: docker compose up -d --build
+#
+# O volume "wpp_auth" guarda a sessão do WhatsApp. Nunca rode com "docker
+# compose down -v", porque o "-v" apaga o volume e você perde a sessão.
+
+services:
+  kairos-whatsapp:
+    build: .
+    container_name: kairos-whatsapp
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      TZ: "America/Sao_Paulo"
+      WPP_AUTH_DIR: "/app/wpp-auth"
+    env_file:
+      - .env
+    volumes:
+      - wpp_auth:/app/wpp-auth
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  wpp_auth:
